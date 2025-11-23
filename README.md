@@ -24,17 +24,19 @@ O projeto foi construído seguindo boas práticas de desenvolvimento e design pa
 Como foco da disciplina, foram implementadas diversas rotinas diretamente no banco de dados para performance e integridade:
 
 ### ⚡ Procedures
-* `registrar_presenca`: Realiza a inscrição de um atleta em um evento, validando duplicidades.
-* `agendar_evento`: (Via API Transaction) Garante a atomicidade na criação de Evento + Local.
+* `registrar_presenca`: Realiza a inscrição de um atleta em um evento, validando se ele já está inscrito para evitar duplicidade.
 
-### 🔍 Functions (Relatórios)
-* `calendario_eventos`: Filtra eventos por Dia, Semana ou Mês, com tratamento de Fuso Horário (UTC/Local).
-* `historico_atleta`: Retorna a capivara completa de competições de um atleta.
-* `avaliacoes_eventos`: Agrega médias de notas e concatena comentários de avaliações.
-* `exibir_detalhes_encontro`: Traz um relatório detalhado com múltiplos JOINS (Evento, Local, CT, Atletas).
+### 🔍 Functions (Relatórios e Consultas)
+* `calendario_eventos`: Filtra eventos por Dia, Semana ou Mês, aplicando tratamento de Fuso Horário (UTC) para garantir precisão nas datas.
+* `historico_atleta`: Retorna o histórico completo de competições passadas de um atleta.
+* `avaliacoes_eventos`: Relatório analítico que calcula a média de notas e concatena múltiplos comentários de avaliações em uma linha.
+* `exibir_detalhes_encontro`: Gera um "Raio-X" do evento usando múltiplos `LEFT JOINS` (Evento, Local, CT, Atletas), exibindo dados mesmo se parciais.
+* `filtrar_encontros_por_modalidade`: Lista eventos de uma modalidade específica, utilizando `DISTINCT` para evitar linhas duplicadas.
+* `exibir_participantes_evento`: Gera a lista de chamada com os nomes dos atletas inscritos em um evento específico.
+* `deletar_avaliacoes_equipe`: Função auxiliar executada pela Trigger para limpar avaliações órfãs.
 
 ### 🔫 Triggers
-* `trg_delete_avaliacoes_equipe`: Gatilho `BEFORE DELETE` que limpa automaticamente as avaliações de uma equipe antes que ela seja excluída, mantendo a integridade referencial.
+* `trg_delete_avaliacoes_equipe`: Gatilho `BEFORE DELETE` que limpa automaticamente as avaliações de uma equipe antes que ela seja excluída, evitando erros de chave estrangeira (*Foreign Key Violation*).
 
 ## ⚙️ Como Rodar o Projeto
 
@@ -411,7 +413,7 @@ Acesse a documentação interavida em: `http://localhost:7069/swagger` (ou a por
 
 ## 🧪 Exemplo de Uso (Endpoints)
 
-### 1. Criar CT completo (Com endereço)
+### 1. Criar CT completo (Transaction)
 
 POST `/api/v1/ct/cadastro-completo`
 
@@ -445,7 +447,7 @@ POST `/api/v1/evento/agendar`
   "cep": "01001-000"
 }
 ```
-### 3. Consultar Calendário
+### 3. Consultar Calendário (Function)
 
 GET `/api/v1/evento/calendario?viewType=mes&data=2025-11-22`
 
